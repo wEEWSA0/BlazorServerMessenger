@@ -1,0 +1,62 @@
+﻿@page "/profile/{userId:int}"
+@using BlazorServerMessenger.Data.Models;
+@using BlazorServerMessenger.Data.Repository;
+@inject UserRepository userRepository
+@inject ChatRepository chatRepository
+@inject ClaimsPrincipal principal
+@inject NavigationManager navManager
+
+<div class="profile-container">
+    <h3 class="name">@name</h3>
+    <p class="public-info">@info</p>
+    <button class="profile-button @profileButtonClass" @onclick="() => GoToChatWithUser(name)">Написать</button>
+</div>
+
+@code {
+    [Parameter]
+    public int UserId {get; set; }
+
+    User ourUser;
+    private bool isOurPage = false;
+    private string profileButtonClass = "";
+
+    private string name;
+    private string info;
+
+    protected override void OnInitialized()
+    {
+        (name, info) = userRepository.GetUserNameAndPublicInfo(UserId);
+
+        if (string.IsNullOrWhiteSpace(info))
+        {
+            info = "It's standart placeholder. User don't leave any information";
+        }
+
+        ourUser = userRepository.GetUserByNameOrThrow(principal.Identity!.Name!);
+
+        if (ourUser.Id == UserId)
+        {
+            isOurPage = true;
+            profileButtonClass = "profile-button-blocked";
+        }
+    }
+
+    public void GoToChatWithUser(string talkerName)
+    {
+        if (isOurPage)
+        {
+            return;
+        }
+
+        var userTalker = userRepository.GetUserByNameOrThrow(talkerName);
+
+        if (!chatRepository.TryGetChatBetweenUsers(ourUser.Id, userTalker.Id, out var chat))
+        {
+            string chatName = $"{ourUser.UserName} & {userTalker.UserName}";
+
+            chat = chatRepository.CreateOrGetChatBetweenUsers(ourUser.Id, userTalker.Id, chatName);
+        }
+
+        navManager.NavigateTo($"/chat/{chat.Id}");
+    }
+}

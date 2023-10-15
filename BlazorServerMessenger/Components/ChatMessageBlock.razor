@@ -1,0 +1,33 @@
+﻿
+
+<div class="messageContainer">
+    <p class="name">@Name</p>
+    @for (int i = 0; i < Messages.Count; i++)
+    {
+        <div class="messageBody">
+            <div class="messageGreenZone @IsMineCss">
+                <p class="messageText">@Messages[i]</p>
+            </div>
+            @if (i == Messages.Count - 1)
+            {
+                <div class="messageDate">@Date.Hour:@Date.Minute</div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Name { get; set; } = null!;
+
+    [Parameter]
+    public List<string> Messages { get; set; } = null!;
+
+    [Parameter]
+    public DateTime Date { get; set; }
+
+    [Parameter]
+    public bool IsMine { get; set; } = false;
+
+    private string? IsMineCss => IsMine ? "myMessage" : null;
+}

@@ -1,0 +1,70 @@
+﻿@page "/user/find"
+@using BlazorServerMessenger.Data.Models;
+@using BlazorServerMessenger.Data.Repository;
+@attribute [Authorize]
+@inject UserRepository userRepository
+@inject ClaimsPrincipal principal
+@inject NavigationManager navManager
+
+<div class="menu-container">
+    <input @bind-value=@inputValue></input>
+    <button class="search" @onclick="Submit">Найти</button>
+</div>
+
+@if (foundUsers is null)
+{
+    <p class="empty">...</p>
+}
+else
+{
+    @if (foundUsers.Count == 0)
+    {
+        <p class="empty">Пусто...</p>
+    }
+    else
+    {
+        @foreach (User user in foundUsers)
+        {
+            <div class="user-container">
+                <a class="user-name" @onclick="() => GoToProfile(user.Id)">@user.UserName</a>
+
+                <div class="description"><p>@user.PublicInfo</p></div>
+            </div>
+        }
+    }
+}
+
+@code {
+    string inputValue = "";
+    List<User>? foundUsers;
+    User ourUser;
+
+    protected override void OnInitialized()
+    {
+        ourUser = userRepository.GetUserByNameOrThrow(principal.Identity!.Name!);
+    }
+
+    public void Submit()
+    {
+        if (inputValue == "")
+        {
+            foundUsers = null;
+
+            return;
+        }
+
+        foundUsers = userRepository.GetUsersContainsName(inputValue);
+
+        var ourFoundUser = foundUsers.Where(x => x.UserName == ourUser.UserName).FirstOrDefault();
+
+        if (ourFoundUser is not null)
+        {
+            foundUsers.Remove(ourFoundUser);
+        }
+    }
+
+    public void GoToProfile(int id)
+    {
+        navManager.NavigateTo($"/profile/{id}");
+    }
+}

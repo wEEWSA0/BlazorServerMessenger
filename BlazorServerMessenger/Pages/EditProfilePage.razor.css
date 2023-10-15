@@ -1,0 +1,42 @@
+﻿.profile-container {
+    display: flex;
+    width: fit-content;
+    flex-direction: column;
+    align-items: flex-start;
+    width: clamp(150px, 100%, 500px);
+}
+
+.name {
+    margin-bottom: 1rem;
+    font-size: 36px;
+}
+
+.profile-button {
+    margin-top: 0.5rem;
+    width: 100%;
+    overflow: hidden;
+}
+
+.public-info {
+    margin-bottom: 2rem;
+    width: 100%;
+    font-size: 16px;
+    line-height: 1.5rem;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding-left: 0.5rem;
+}
+
+.public-info:focus {
+    outline: solid 1px var(--brand-light);
+}
+
+@media (max-width: 640px)
+{
+    .profile-container {
+        display: flex;
+        width: fit-content;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+}

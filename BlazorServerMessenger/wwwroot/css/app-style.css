@@ -1,0 +1,89 @@
+﻿:root {
+    /*    --dark: #212326;
+        --dark-grey: #242933;
+    --grey: #2e3440;
+        --light-grey: #41414e;
+        --white: #f6efe5;*/
+    --white: #EEF0F2;
+    --white-rgba: rgba(241, 248, 255, 0.1);
+    --dark: #040E17;
+    /*Brand*/
+    --brand: #C5E545;
+    --brand-high-light: #EAF4C1;
+    --brand-light: #DEF191;
+    --brand-dark: #6C8507;
+    --brand-high-dark: #212900;
+    /*Neutral*/
+    --neutral-high-light: #C3CED9;
+    --neutral-light: #8697A6;
+    --neutral-low-light: #627180;
+    --neutral: #3F4A54;
+    --neutral-low-dark: #2F363D;
+    --neutral-dark: #212529;
+    --neutral-high-dark: #111314;
+    /*Old palette override*/
+    --grey: var(--neutral);
+    --light-grey: var(--neutral-light);
+    --dark-grey: var(--neutral-dark);
+    --our-message-color: #313D2F;
+    --message-color: var(--neutral-low-dark);
+    --fon-color: var(--neutral-dark);
+}
+
+body {
+    background-color: var(--fon-color);
+    color: var(--white);
+    outline: solid 1px var(--brand-light);
+}
+
+h3 {
+    color: var(--white);
+}
+
+input {
+    background-color: var(--neutral-low-dark);
+    border: solid 1px var(--brand-light);
+    border-radius: 8px;
+/*    color: var(--neutral-dark);*/
+    height: 30px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+    input:focus {
+        border: solid 2px var(--brand-light) !important;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+button {
+    background-color: var(--brand-light);
+    color: var(--dark);
+    border: none;
+    border-radius: 8px;
+    height: 30px;
+}
+
+    input:focus, button:focus {
+        outline: none;
+    }
+
+a {
+    color: var(--white);
+}
+
+    a:hover, a:focus {
+        color: var(--brand-light);
+    }
+
+.page {
+    background-color: var(--fon-color);
+}
+
+.sidebar {
+    background-color: var(--neutral-dark);
+}
+
+.top-row {
+    background-color: var(--neutral-dark);
+    border-color: var(--neutral-dark);
+}

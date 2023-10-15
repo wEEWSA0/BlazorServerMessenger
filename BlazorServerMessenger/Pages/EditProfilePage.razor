@@ -1,0 +1,38 @@
+﻿@page "/profile"
+@using BlazorServerMessenger.Data.Models;
+@using BlazorServerMessenger.Data.Repository;
+@inject UserRepository userRepository
+@inject ChatRepository chatRepository
+@inject ClaimsPrincipal principal
+@inject NavigationManager navManager
+
+<div class="profile-container">
+    <h3 class="name">@ourUser.UserName</h3>
+    <textarea autocomplete="off" 
+        placeholder=@placeholder
+        @bind=@ourUser.PublicInfo
+        class="public-info">@ourUser.PublicInfo</textarea>
+    <button class="profile-button" @onclick="() => ApplyChanges(ourUser.PublicInfo)">Применить изменения</button>
+</div>
+
+@code {
+    User ourUser; // TODO вынести ourUser в отдельный inject UserPrincipal или UserManager
+
+    private const string placeholder = "It's standart placeholder. User don't leave any information";
+
+    protected override void OnInitialized()
+    {
+        ourUser = userRepository.GetUserByNameOrThrow(principal.Identity!.Name!);
+    }
+
+    private void ApplyChanges(string publicInfo)
+    {
+        if (publicInfo is null)
+        {
+            publicInfo = "";
+        }
+
+        userRepository.UpdateUserPublicInfo(ourUser.Id, publicInfo);
+
+    }
+}

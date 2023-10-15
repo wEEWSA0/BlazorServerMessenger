@@ -1,0 +1,57 @@
+﻿@* @page "/chats" *@
+@page "/"
+@using BlazorServerMessenger.Data.Repository
+@using BlazorServerMessenger.Data.Models
+@attribute [Authorize]
+@inject ChatRepository chatRepository
+@inject UserRepository userRepository
+@inject ClaimsPrincipal principal
+@inject NavigationManager navManager
+
+@if (chats == null)
+{
+    <p>Loading...</p>
+}
+else if (chats.Count == 0)
+{
+    <p>У вас пока нет чатов.</p>
+}
+else
+{
+    @foreach (Chat chat in chats)
+    {
+        <ChatBlock Name=@chat.Name LastMessage=@GetChatLastMessage(chat) OnClick="() => GoToChat(chat.Id)" />
+    }
+}
+
+@code {
+    List<Chat> chats;
+    User ourUser;
+
+    protected override void OnInitialized()
+    {
+        ourUser = userRepository.GetUserByNameOrThrow(principal.Identity!.Name!);
+
+        chats = chatRepository.GetUserChatsWithOnlyLastMessage(ourUser.Id);
+    }
+
+    private void GoToChat(int chatId)
+    {
+        navManager.NavigateTo($"/chat/{chatId}");
+    }
+
+    private string GetChatLastMessage(Chat chat)
+    {
+        var messages = chat.Messages;
+
+        if (messages is null || messages.Count == 0)
+        {
+            return "Нет сообщений";
+        }
+
+        // var lastMessage = messages.OrderBy(x => x.Timestamp).LastOrDefault();
+
+        // return lastMessage.Content;
+        return messages.Single().Content;
+    }
+}

@@ -1,0 +1,215 @@
+﻿@page "/chat/{chatId:int}"
+@using BlazorServerMessenger.Components
+@using BlazorServerMessenger.Data.Repository
+@using BlazorServerMessenger.Data.Models
+@using Microsoft.AspNetCore.SignalR.Client;
+@attribute [Authorize]
+@implements IDisposable
+@inject UserRepository userRepository
+@inject ChatRepository chatRepository
+@inject ClaimsPrincipal principal
+@inject IJSRuntime JSRuntime
+
+<div>
+    <div @ref="chatContainer" class="message-container">
+        @if (loadedChatMessagesCount >= chatMessagesPerLoad && !isFullMessageHistoryLoaded)
+        {
+            <a class="text-center load-more" @onclick=UpdateChatMessages >Load more</a>
+        }
+        else
+        {
+            <div class="title">
+                Chat created
+            </div>
+        }
+
+        @* @foreach (var message in messages)
+        {
+            bool isMineMessage = ourUser.UserName == message.Sender.UserName;
+
+            var list = new List<string> { message.Content };
+
+            <ChatMessageBlock Name=@message.Sender.UserName
+                              Messages=@list
+                              IsMine=@isMineMessage
+                              Date=@message.Timestamp />
+        } *@
+
+        @for (int i = 0; i < messages.Count; i++)
+        {
+            List<string> messageBlock = new();
+
+            var firstMessage = messages[i];
+
+            bool isMineFirstMessage = ourUser.UserName == firstMessage.Sender.UserName;
+
+            messageBlock.Add(firstMessage.Content);
+
+            while (i+1 < messages.Count)
+            {
+                bool isMineMessage = ourUser.UserName == messages[i+1].Sender.UserName;
+
+                bool isInMinute = firstMessage.Timestamp.Minute == messages[i + 1].Timestamp.Minute
+                    && firstMessage.Timestamp.Hour == messages[i + 1].Timestamp.Hour
+                    && firstMessage.Timestamp.Day == messages[i + 1].Timestamp.Day;
+
+                if (isMineFirstMessage == isMineMessage && isInMinute)
+                {
+                    messageBlock.Add(messages[i+1].Content);
+
+                    i++;
+
+                    continue;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            <ChatMessageBlock Name=@firstMessage.Sender.UserName
+                              Messages=@messageBlock
+                              IsMine=@isMineFirstMessage
+                              Date=@firstMessage.Timestamp />
+        }
+        <section id="contact" />
+    </div>
+
+    <div class="fixed-block">
+        <div class="input-block">
+            <input autofocus @bind-value=@textMessageToSend @onkeydown=@HandleKeyPress type="text" />
+            <button @onclick="SendMessage">Отправить</button>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public int ChatId { get; set; }
+
+    private HubConnection hubConnection;
+
+    private const int chatMessagesPerLoad = 10;
+    private int loadedChatMessagesCount;
+    private string? textMessageToSend;
+    private List<ChatMessage> messages = new();
+    private bool isFullMessageHistoryLoaded = false;
+
+    private User ourUser;
+
+    private ElementReference chatContainer;
+
+    protected override void OnInitialized()
+    {
+        ourUser = userRepository.GetUserByNameOrThrow(principal.Identity!.Name!);
+
+        UpdateChatMessages();
+
+        SetupHubConnection();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("scroll");
+        }
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            SendMessage();
+        }
+    }
+
+    private async void SetupHubConnection()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl("https://localhost:7049/chat/" + ChatId)
+                // .WithUrl($"/chat/{ChatId}/") not work
+                .WithAutomaticReconnect()
+                .Build();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+        hubConnection.On("ReceiveChatMessage", () =>
+        {
+            if (loadedChatMessagesCount > chatMessagesPerLoad) // есть ли смысл в этом?
+            {
+                var previousLoadedMessages = loadedChatMessagesCount;
+                loadedChatMessagesCount = 0;
+                UpdateChatMessages(previousLoadedMessages);
+            }
+            else
+            {
+                LoadFirstsChatMessages();
+            }
+            InvokeAsync(StateHasChanged);
+            InvokeAsync(async () => await JSRuntime.InvokeVoidAsync("scroll"));
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    private void LoadFirstsChatMessages()
+    {
+        messages = chatRepository.GetLastChatMessages(ChatId, chatMessagesPerLoad);
+
+        loadedChatMessagesCount = messages.Count;
+    }
+
+    private void UpdateChatMessages()
+    {
+        UpdateChatMessages(chatMessagesPerLoad);
+    }
+
+    private void UpdateChatMessages(int count)
+    {
+        var loadOlderMessages = chatRepository.GetLastChatMessagesInRange(ChatId, loadedChatMessagesCount, count);
+
+        if (loadOlderMessages.Count == 0)
+        {
+            isFullMessageHistoryLoaded = true;
+        }
+
+        loadOlderMessages.Reverse();
+
+        messages.InsertRange(0, loadOlderMessages);
+
+        loadedChatMessagesCount = messages.Count;
+    }
+
+    private async void SendMessage()
+    {
+        if (!string.IsNullOrWhiteSpace(textMessageToSend))
+        {
+            chatRepository.SendMessage(ChatId, ourUser.Id, textMessageToSend);
+            textMessageToSend = string.Empty;
+
+            await hubConnection.SendAsync("SendChatMessage", ChatId);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (hubConnection != null)
+        {
+            hubConnection.DisposeAsync().AsTask().Wait();
+            Console.WriteLine("Dispose");
+        }
+    }
+}
+
+<script>
+    function scroll() {
+        document.getElementById('contact').scrollIntoView({ behavior: 'instant' }) // 'smooth' для плавности
+    }
+</script>

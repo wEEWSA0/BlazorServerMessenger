@@ -1,0 +1,31 @@
+﻿<AuthorizeView>
+    <Authorized>
+        <a class="white-link account" href="Identity/Account/Manage">You, @context.User.Identity?.Name</a>
+        <form method="post" action="Identity/Account/Logout">
+            <button type="submit" class="nav-link btn btn-link white-link log-out">Log out</button>
+        </form>
+    </Authorized>
+    <NotAuthorized>
+        <a class="white-link" href="Identity/Account/Register">Register</a>
+        <a class="white-link" href="Identity/Account/Login">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+<style>
+    .white-link {
+        color: var(--white);
+    }
+
+        .white-link:hover, .white-link:focus {
+             color: var(--brand-light);
+        }
+    
+    .log-out {
+        margin-top: -12px;
+    }
+
+    .account {
+        font-size: 16px;
+        margin-right: 20px;
+    }
+</style>

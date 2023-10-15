@@ -1,0 +1,39 @@
+﻿.user-container {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.user-name {
+    margin-right: 4rem;
+    font-size: 18px;
+    color: var(--white);
+}
+
+.description {
+    width: 100vh;
+    font-size: 16px;
+}
+
+.empty {
+    margin-top: 1rem;
+    margin-left: 1rem;
+    font-size: 18px;
+}
+
+.menu-container {
+    margin-bottom: 1rem;
+}
+
+input {
+    width: clamp(180px, 80%, 1000px);
+    margin-bottom: 6px;
+}
+
+.search {
+    width: clamp(60px, 18%, 100px);
+}
+
+a:hover, a:focus {
+    color: var(--brand-light);
+}
